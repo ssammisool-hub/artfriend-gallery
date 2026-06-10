@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Art Friend — Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Noto+Serif+KR:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1a1a;
+    --paper:#ffffff;
+    --line:#e6e4e0;
+    --muted:#9a968f;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html,body{background:var(--paper);}
+  body{
+    color:var(--ink);
+    font-family:'Noto Serif KR', serif;
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ===== Minimal logo ===== */
+  .masthead{
+    padding:46px 24px 0;
+    text-align:center;
+  }
+  .logo{
+    display:inline-flex;
+    align-items:baseline;
+    gap:10px;
+    line-height:1;
+  }
+  .logo-mark{
+    font-family:'Playfair Display', serif;
+    font-weight:500;
+    font-size:22px;
+    letter-spacing:0.04em;
+  }
+  .logo-sub{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-size:12px;
+    letter-spacing:0.34em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* ===== Hero search (portal style) ===== */
+  .hero{
+    padding:54px 24px 30px;
+    text-align:center;
+  }
+  .search-wrap{
+    position:relative;
+    max-width:480px;
+    margin:0 auto;
+  }
+  #searchInput{
+    width:100%;
+    font-family:'Noto Serif KR', serif;
+    font-weight:300;
+    font-size:17px;
+    color:var(--ink);
+    text-align:center;
+    border:none;
+    border-bottom:1px solid var(--line);
+    padding:14px 30px 16px;
+    background:transparent;
+    letter-spacing:0.02em;
+    transition:border-color .5s var(--ease);
+  }
+  #searchInput::placeholder{color:var(--muted); font-style:normal;}
+  #searchInput:focus{outline:none; border-bottom-color:var(--ink);}
+  .search-underline{
+    position:absolute; left:50%; bottom:0; height:1px; width:0;
+    background:var(--ink); transform:translateX(-50%);
+    transition:width .55s var(--ease);
+  }
+  #searchInput:focus ~ .search-underline{width:100%;}
+  .search-icon{
+    position:absolute; right:6px; top:50%; transform:translateY(-50%);
+    width:15px; height:15px; opacity:.4; pointer-events:none;
+  }
+
+  /* ===== Tag row ===== */
+  .tag-row{
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:9px;
+    max-width:760px; margin:30px auto 0;
+    padding:0 16px;
+  }
+  .tag-pill{
+    font-family:'Noto Serif KR', serif;
+    font-weight:300;
+    font-size:13px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink);
+    padding:7px 17px;
+    border-radius:999px;
+    cursor:pointer;
+    letter-spacing:0.02em;
+    transition:background .4s var(--ease), color .4s var(--ease), border-color .4s var(--ease);
+  }
+  .tag-pill:hover{border-color:var(--ink);}
+  .tag-pill.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
+  /* ===== Gallery grid ===== */
+  .gallery{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));
+    gap:1px;
+    background:var(--line);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    margin-top:54px;
+  }
+  .card{
+    background:var(--paper);
+    cursor:pointer;
+    overflow:hidden;
+    position:relative;
+    aspect-ratio:1/1;
+    opacity:0;
+    animation:fadeUp .7s var(--ease) forwards;
+  }
+  @keyframes fadeUp{
+    from{opacity:0; transform:translateY(14px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .card img{
+    width:100%; height:100%;
+    object-fit:cover; display:block;
+    filter:grayscale(12%);
+    transition:transform .8s var(--ease), filter .6s var(--ease);
+    -webkit-user-drag:none; user-select:none;
+  }
+  .card:hover img{transform:scale(1.045); filter:grayscale(0%);}
+  .card-overlay{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    padding:18px;
+    background:linear-gradient(to top, rgba(0,0,0,.6) 0%, rgba(0,0,0,0) 55%);
+    opacity:0; transition:opacity .45s var(--ease);
+    color:#fff; pointer-events:none;
+  }
+  .card:hover .card-overlay{opacity:1;}
+  .card-overlay .c-name{font-family:'Playfair Display',serif; font-size:17px; font-weight:500;}
+  .card-overlay .c-meta{font-size:12px; color:#e8e6e2; margin-top:3px; font-weight:300;}
+
+  .empty-state{
+    grid-column:1/-1; text-align:center;
+    padding:110px 24px; color:var(--muted); background:var(--paper);
+  }
+  .empty-state .e-title{
+    font-family:'Playfair Display',serif; font-style:italic;
+    font-size:19px; color:var(--ink); margin-bottom:9px;
+  }
+
+  footer{
+    text-align:center; padding:42px 24px;
+    font-size:11px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* ===== Lightbox ===== */
+  .lightbox{
+    position:fixed; inset:0; z-index:200;
+    background:rgba(255,255,255,0);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; visibility:hidden;
+    transition:opacity .45s var(--ease), background .45s var(--ease), visibility .45s var(--ease);
+  }
+  .lightbox.open{
+    opacity:1; visibility:visible;
+    background:rgba(255,255,255,.98);
+  }
+  .lb-shell{
+    width:100%; height:100%;
+    transform:scale(.985);
+    transition:transform .5s var(--ease);
+    overflow:hidden;
+  }
+  .lightbox.open .lb-shell{transform:scale(1);}
+
+  .lb-stage{
+    position:relative; width:100%; height:100%;
+    overflow:hidden;
+    touch-action:none;
+  }
+  .lb-track{
+    display:flex; height:100%; width:100%;
+    will-change:transform;
+  }
+  .lb-slide{
+    flex:0 0 100%;
+    height:100%;
+    display:grid;
+    grid-template-columns:1.25fr 1fr;
+    align-items:center;
+    gap:40px;
+    padding:64px 72px;
+  }
+  .lb-media{
+    height:100%;
+    display:flex; align-items:center; justify-content:center;
+    cursor:zoom-out;
+  }
+  .lb-media img{
+    max-width:100%; max-height:78vh;
+    object-fit:contain;
+    box-shadow:0 30px 90px -28px rgba(0,0,0,.28);
+    -webkit-user-drag:none; user-select:none;
+  }
+  .lb-meta{max-width:380px;}
+  .lb-meta .m-title{
+    font-family:'Playfair Display',serif; font-weight:500;
+    font-size:30px; line-height:1.18; margin-bottom:6px;
+  }
+  .lb-meta .m-author{
+    font-size:13px; color:var(--muted);
+    letter-spacing:0.06em; margin-bottom:26px;
+  }
+  .m-row{
+    display:flex; gap:14px; padding:13px 0;
+    border-top:1px solid var(--line); font-size:13px;
+  }
+  .m-row:last-of-type{border-bottom:1px solid var(--line);}
+  .m-row .m-key{
+    font-family:'Playfair Display',serif; font-style:italic;
+    color:var(--muted); width:82px; flex-shrink:0;
+    text-transform:uppercase; letter-spacing:0.1em; font-size:11px; padding-top:2px;
+  }
+  .m-row .m-val{flex:1; line-height:1.7; font-weight:300;}
+  .m-tags{display:flex; flex-wrap:wrap; gap:7px; margin-top:22px;}
+  .m-tags .tag-pill{font-size:12px; padding:5px 13px;}
+
+  /* nav + close (desktop) */
+  .lb-close{
+    position:fixed; top:28px; right:34px; z-index:210;
+    font-family:'Playfair Display',serif; font-style:italic;
+    font-size:13px; letter-spacing:0.1em;
+    background:none; border:none; cursor:pointer; color:var(--ink);
+    transition:color .3s var(--ease);
+  }
+  .lb-close:hover{color:var(--muted);}
+  .lb-nav{
+    position:fixed; top:50%; transform:translateY(-50%); z-index:210;
+    width:46px; height:46px; border-radius:50%;
+    border:1px solid var(--line); background:rgba(255,255,255,.7);
+    backdrop-filter:blur(4px);
+    cursor:pointer; font-family:'Playfair Display',serif; font-size:18px; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    transition:border-color .3s var(--ease), background .3s var(--ease);
+  }
+  .lb-nav:hover{border-color:var(--ink); background:#fff;}
+  .lb-prev{left:26px;} .lb-next{right:26px;}
+  .lb-hint{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:210;
+    font-size:11px; letter-spacing:0.14em; color:var(--muted);
+    text-transform:uppercase;
+  }
+
+  @media (max-width:780px){
+    .masthead{padding:34px 20px 0;}
+    .hero{padding:40px 20px 24px;}
+    .gallery{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); margin-top:40px;}
+    .lb-slide{
+      grid-template-columns:1fr;
+      grid-template-rows:auto auto;
+      align-content:center;
+      gap:22px; padding:64px 26px 30px;
+      overflow-y:auto;
+    }
+    .lb-media img{max-height:52vh;}
+    .lb-meta{max-width:none;}
+    .lb-meta .m-title{font-size:24px;}
+    .lb-nav{display:none;}
+    .lb-close{top:18px; right:20px;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:.01ms !important; animation-duration:.01ms !important;}
+    .card{opacity:1;}
+  }
+  ::selection{background:var(--ink); color:var(--paper);}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="logo">
+    <span class="logo-mark">Art Friend</span>
+    <span class="logo-sub">Gallery</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="search-wrap">
+    <input id="searchInput" type="text" placeholder="작가 이름으로 검색" autocomplete="off" spellcheck="false">
+    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="1.4">
+      <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
+    </svg>
+    <span class="search-underline"></span>
+  </div>
+  <div class="tag-row" id="tagRow"></div>
+</section>
+
+<main class="gallery" id="gallery"></main>
+
+<footer>Art Friend Sangdong · 미술친구 상동점</footer>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <button class="lb-close" id="lbClose">닫기 ✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="이전">‹</button>
+  <button class="lb-nav lb-next" id="lbNext" aria-label="다음">›</button>
+  <div class="lb-shell">
+    <div class="lb-stage" id="lbStage">
+      <div class="lb-track" id="lbTrack"></div>
+    </div>
+  </div>
+  <span class="lb-hint" id="lbHint">스와이프로 탐색 · 그림을 탭하면 닫힘</span>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
