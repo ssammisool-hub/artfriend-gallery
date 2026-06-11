@@ -139,25 +139,12 @@ function slideMarkup(art){
     </div>`;
 }
 
-// 현재 인덱스 기준으로 [이전, 현재, 다음] 3개 슬라이드를 그린다 (순환)
-function buildSlides(){
-  const n = viewList.length;
-  const prev = viewList[(currentIndex - 1 + n) % n];
-  const cur  = viewList[currentIndex];
-  const next = viewList[(currentIndex + 1) % n];
-  track.innerHTML = slideMarkup(prev) + slideMarkup(cur) + slideMarkup(next);
-  setTrack(-stageWidth(), false);
-  bindSlideTags();
-}
-
 function bindSlideTags(){
   track.querySelectorAll('.tag-pill[data-tag]').forEach(p => {
     p.addEventListener('click', (e) => {
       e.stopPropagation();
-      if (didDrag) return;            // 드래그였으면 무시
       const tag = p.dataset.tag;
       closeModal();
-      // 태그 활성화 + 상단 태그버튼 동기화
       activeTag = tag;
       searchQuery = ''; searchInput.value = '';
       document.querySelectorAll('#tagRow .tag-pill').forEach(b =>
@@ -167,22 +154,27 @@ function bindSlideTags(){
   });
 }
 
-function stageWidth(){ return stage.clientWidth; }
-
-function setTrack(x, animate){
-  track.style.transition = animate
-    ? 'transform .42s cubic-bezier(.22,.61,.36,1)' : 'none';
-  track.style.transform = `translateX(${x}px)`;
+function renderSlide(){
+  const art = viewList[currentIndex];
+  track.style.transition = 'none';
+  track.style.transform = 'translateX(0)';
+  track.innerHTML = slideMarkup(art);
+  track.classList.remove('lb-fade');
+  void track.offsetWidth; // reflow to restart animation
+  track.classList.add('lb-fade');
+  bindSlideTags();
 }
+
+function stageWidth(){ return stage.clientWidth; }
 
 function openModal(idx){
   currentIndex = idx;
-  buildSlides();
+  renderSlide();
   lightbox.classList.add('open');
   document.body.style.overflow = 'hidden';
   hint.style.opacity = '1';
   clearTimeout(hint._t);
-  hint._t = setTimeout(() => { hint.style.opacity = '0'; }, 2600);
+  hint._t = setTimeout(() => { hint.style.opacity = '0'; }, 2200);
 }
 
 function closeModal(){
@@ -191,79 +183,20 @@ function closeModal(){
 }
 
 function formatDate(str){
-  const d = new Date(str);
-  return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.`;
+  return (str || '').trim();
 }
 
-// ---- 다음/이전 (애니메이션 후 슬라이드 재구성) ----
-let animating = false;
-function go(dir){            // dir: +1 next, -1 prev
-  if (animating || viewList.length < 2) return;
-  animating = true;
-  const W = stageWidth();
-  setTrack(dir > 0 ? -2*W : 0, true);
-  const onEnd = () => {
-    track.removeEventListener('transitionend', onEnd);
-    const n = viewList.length;
-    currentIndex = (currentIndex + dir + n) % n;
-    buildSlides();          // 가운데로 리셋
-    animating = false;
-  };
-  track.addEventListener('transitionend', onEnd);
+function go(dir){
+  if (viewList.length < 2) return;
+  const n = viewList.length;
+  currentIndex = (currentIndex + dir + n) % n;
+  renderSlide();
 }
-
-// ---- 포인터 드래그 / 스와이프 / 탭 ----
-let startX = 0, startY = 0, startT = 0, dragging = false, didDrag = false, baseX = 0;
-
-stage.addEventListener('pointerdown', (e) => {
-  if (animating) return;
-  dragging = true; didDrag = false;
-  startX = e.clientX; startY = e.clientY; startT = Date.now();
-  baseX = -stageWidth();
-  setTrack(baseX, false);
-  stage.setPointerCapture(e.pointerId);
-});
-
-stage.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const dx = e.clientX - startX;
-  const dy = e.clientY - startY;
-  if (!didDrag && Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) didDrag = true;
-  if (didDrag){
-    e.preventDefault();
-    setTrack(baseX + dx, false);
-  }
-});
-
-stage.addEventListener('pointerup', (e) => {
-  if (!dragging) return;
-  dragging = false;
-  const dx = e.clientX - startX;
-  const dy = e.clientY - startY;
-  const dt = Date.now() - startT;
-  const W = stageWidth();
-  const threshold = Math.min(W * 0.18, 90);
-
-  // 탭 판정: 움직임이 거의 없고 짧게 누름 → 이미지면 닫기
-  if (!didDrag && Math.abs(dx) < 8 && Math.abs(dy) < 8 && dt < 300){
-    if (e.target.closest('[data-close]')) closeModal();
-    return;
-  }
-
-  if (dx <= -threshold)      go(1);
-  else if (dx >= threshold)  go(-1);
-  else                       setTrack(baseX, true);  // 스냅백
-});
-
-stage.addEventListener('pointercancel', () => {
-  if (!dragging) return;
-  dragging = false;
-  setTrack(-stageWidth(), true);
-});
 
 // 배경(딤) 클릭 시 닫기
 lightbox.addEventListener('click', (e) => {
   if (e.target === lightbox || e.target.classList.contains('lb-shell')) closeModal();
+  if (e.target.closest('[data-close]')) closeModal();
 });
 
 // 버튼 + 키보드

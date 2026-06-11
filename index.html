@@ -194,14 +194,18 @@
   .lb-stage{
     position:relative; width:100%; height:100%;
     overflow:hidden;
-    touch-action:none;
   }
   .lb-track{
-    display:flex; height:100%; width:100%;
-    will-change:transform;
+    height:100%; width:100%;
+  }
+  .lb-track.lb-fade{
+    animation:lbFadeIn .4s var(--ease);
+  }
+  @keyframes lbFadeIn{
+    from{opacity:0; transform:translateY(8px);}
+    to{opacity:1; transform:translateY(0);}
   }
   .lb-slide{
-    flex:0 0 100%;
     height:100%;
     display:grid;
     grid-template-columns:1.25fr 1fr;
@@ -264,9 +268,9 @@
   .lb-nav:hover{border-color:var(--ink); background:#fff;}
   .lb-prev{left:26px;} .lb-next{right:26px;}
   .lb-hint{
-    position:fixed; bottom:26px; left:50%; transform:translateX(-50%); z-index:210;
+    position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:210;
     font-size:11px; letter-spacing:0.14em; color:var(--muted);
-    text-transform:uppercase;
+    text-transform:uppercase; transition:opacity .4s var(--ease);
   }
 
   @media (max-width:780px){
@@ -283,7 +287,8 @@
     .lb-media img{max-height:52vh;}
     .lb-meta{max-width:none;}
     .lb-meta .m-title{font-size:24px;}
-    .lb-nav{display:none;}
+    .lb-nav{display:flex; width:38px; height:38px; font-size:16px;}
+    .lb-prev{left:10px;} .lb-next{right:10px;}
     .lb-close{top:18px; right:20px;}
   }
 
@@ -333,7 +338,7 @@
       <div class="lb-track" id="lbTrack"></div>
     </div>
   </div>
-  <span class="lb-hint" id="lbHint">스와이프로 탐색 · 그림을 탭하면 닫힘</span>
+  <span class="lb-hint" id="lbHint">화살표로 탐색 · 그림을 탭하면 닫힘</span>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
