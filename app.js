@@ -4,8 +4,10 @@
 
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIsCafYJeB2Aw9S4wfwBWNIVMGgOi8oVRNWX-0we-0O4GFvYpgieihGMWx5D4EkAXN461Pw30T0x2F/pub?gid=0&single=true&output=csv";
 
+const FIXED_TAGS = ["Kids", "Junior", "Drawing", "Craft", "Special", "Exhibition"];
+
 let ARTWORKS = [];
-let activeTag = "";
+let activeTags = new Set();
 let searchQuery = "";
 let viewList = [];
 let currentIndex = 0;
@@ -31,9 +33,9 @@ function loadData(){
           date: (row.date || '').trim(),
           description: (row.desc || '').trim(),
           tags: (row.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+          keywords: (row.keywords || '').split(',').map(t => t.trim()).filter(Boolean),
           image: (row.img || '').trim()
         }));
-      buildTags();
       render();
     },
     error: () => {
@@ -46,10 +48,9 @@ function loadData(){
   });
 }
 
-// ---------- 태그 버튼 생성 ----------
+// ---------- 태그 버튼 생성 (고정) ----------
 function buildTags(){
-  const tags = [...new Set(ARTWORKS.flatMap(a => a.tags))].sort();
-  tags.forEach(tag => {
+  FIXED_TAGS.forEach(tag => {
     const pill = document.createElement('button');
     pill.className = 'tag-pill';
     pill.textContent = tag;
@@ -60,9 +61,10 @@ function buildTags(){
 }
 
 function toggleTag(tag){
-  activeTag = (activeTag === tag) ? "" : tag;
+  if (activeTags.has(tag)) activeTags.delete(tag);
+  else activeTags.add(tag);
   document.querySelectorAll('#tagRow .tag-pill').forEach(p => {
-    p.classList.toggle('active', p.dataset.tag === activeTag);
+    p.classList.toggle('active', activeTags.has(p.dataset.tag));
   });
   render();
 }
@@ -71,8 +73,15 @@ function toggleTag(tag){
 function getFiltered(){
   const q = searchQuery.trim().toLowerCase();
   return ARTWORKS.filter(a => {
-    if (q && !a.author.toLowerCase().includes(q)) return false;
-    if (activeTag && !a.tags.includes(activeTag)) return false;
+    if (q){
+      const hay = [a.author, a.title, ...a.keywords].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (activeTags.size > 0){
+      for (const t of activeTags){
+        if (!a.tags.includes(t)) return false;
+      }
+    }
     return true;
   });
 }
@@ -121,7 +130,7 @@ const track = document.getElementById('lbTrack');
 const hint = document.getElementById('lbHint');
 
 function slideMarkup(art){
-  const tags = art.tags.map(t =>
+  const tags = art.tags.filter(t => FIXED_TAGS.includes(t)).map(t =>
     `<button class="tag-pill" data-tag="${t}">${t}</button>`).join('');
   return `
     <div class="lb-slide">
@@ -145,10 +154,10 @@ function bindSlideTags(){
       e.stopPropagation();
       const tag = p.dataset.tag;
       closeModal();
-      activeTag = tag;
+      activeTags = new Set([tag]);
       searchQuery = ''; searchInput.value = '';
       document.querySelectorAll('#tagRow .tag-pill').forEach(b =>
-        b.classList.toggle('active', b.dataset.tag === tag));
+        b.classList.toggle('active', activeTags.has(b.dataset.tag)));
       render();
     });
   });
@@ -218,4 +227,5 @@ window.addEventListener('resize', () => {
 });
 
 // ---------- init ----------
+buildTags();
 loadData();
