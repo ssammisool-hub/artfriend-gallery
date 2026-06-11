@@ -305,7 +305,7 @@
 
 <section class="hero">
   <div class="search-wrap">
-    <input id="searchInput" type="text" placeholder="작가 이름으로 검색" autocomplete="off" spellcheck="false">
+    <input id="searchInput" type="text" placeholder="미술친구 작가 이름으로 검색" autocomplete="off" spellcheck="false">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="1.4">
       <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
     </svg>
@@ -314,7 +314,12 @@
   <div class="tag-row" id="tagRow"></div>
 </section>
 
-<main class="gallery" id="gallery"></main>
+<main class="gallery" id="gallery">
+  <div class="empty-state" id="loadingState">
+    <div class="e-title">불러오는 중…</div>
+    <div>작품을 가져오고 있어요.</div>
+  </div>
+</main>
 
 <footer>Art Friend Sangdong · 미술친구 상동점</footer>
 
@@ -331,7 +336,7 @@
   <span class="lb-hint" id="lbHint">스와이프로 탐색 · 그림을 탭하면 닫힘</span>
 </div>
 
-<script src="data.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

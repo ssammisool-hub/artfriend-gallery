@@ -1,15 +1,50 @@
 // ============================================================
-// Art Friend — Gallery script
+// Art Friend — Gallery script (Google Sheets CSV 연동)
 // ============================================================
 
+const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIsCafYJeB2Aw9S4wfwBWNIVMGgOi8oVRNWX-0we-0O4GFvYpgieihGMWx5D4EkAXN461Pw30T0x2F/pub?gid=0&single=true&output=csv";
+
+let ARTWORKS = [];
 let activeTag = "";
 let searchQuery = "";
-let viewList = [];          // 현재 화면에 보이는 작품 목록
-let currentIndex = 0;       // 모달에서 보고 있는 작품의 viewList 내 인덱스
+let viewList = [];
+let currentIndex = 0;
 
 const galleryEl = document.getElementById('gallery');
 const searchInput = document.getElementById('searchInput');
 const tagRow = document.getElementById('tagRow');
+
+// ---------- 데이터 로드 ----------
+function loadData(){
+  Papa.parse(SHEET_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: (results) => {
+      ARTWORKS = results.data
+        .filter(row => row.title && row.img) // 빈 행 제외
+        .map(row => ({
+          id: row.id,
+          title: (row.title || '').trim(),
+          author: (row.artist || '').trim(),
+          material: (row.material || '').trim(),
+          date: (row.date || '').trim(),
+          description: (row.desc || '').trim(),
+          tags: (row.tags || '').split(',').map(t => t.trim()).filter(Boolean),
+          image: (row.img || '').trim()
+        }));
+      buildTags();
+      render();
+    },
+    error: () => {
+      galleryEl.innerHTML = `
+        <div class="empty-state">
+          <div class="e-title">작품을 불러오지 못했습니다</div>
+          <div>잠시 후 새로고침 해주세요.</div>
+        </div>`;
+    }
+  });
+}
 
 // ---------- 태그 버튼 생성 ----------
 function buildTags(){
@@ -250,5 +285,4 @@ window.addEventListener('resize', () => {
 });
 
 // ---------- init ----------
-buildTags();
-render();
+loadData();
