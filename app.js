@@ -28,7 +28,7 @@ function loadData(){
         .map(row => ({
           id: row.id,
           title: (row.title || '').trim(),
-          author: (row.artist || '').trim(),
+          age: (row.artist || '').trim(),
           material: (row.material || '').trim(),
           date: (row.date || '').trim(),
           description: (row.desc || '').trim(),
@@ -74,7 +74,7 @@ function getFiltered(){
   const q = searchQuery.trim().toLowerCase();
   return ARTWORKS.filter(a => {
     if (q){
-      const hay = [a.author, a.title, ...a.keywords].join(' ').toLowerCase();
+      const hay = [a.title, ...a.keywords].join(' ').toLowerCase();
       if (!hay.includes(q)) return false;
     }
     if (activeTags.size > 0){
@@ -108,7 +108,7 @@ function render(){
       <img src="${art.image}" alt="${art.title}" loading="lazy">
       <div class="card-overlay">
         <div class="c-name">${art.title}</div>
-        <div class="c-meta">${art.author} · ${art.material}</div>
+        <div class="c-meta">${[formatAge(art.age), art.material].filter(Boolean).join(' · ')}</div>
       </div>`;
     card.addEventListener('click', () => openModal(idx));
     galleryEl.appendChild(card);
@@ -139,7 +139,7 @@ function slideMarkup(art){
       </div>
       <div class="lb-meta">
         <div class="m-title">${art.title}</div>
-        <div class="m-author">${art.author} 작가</div>
+        <div class="m-author">${formatAge(art.age)}</div>
         <div class="m-row"><div class="m-key">Material</div><div class="m-val">${art.material}</div></div>
         <div class="m-row"><div class="m-key">Date</div><div class="m-val">${formatDate(art.date)}</div></div>
         <div class="m-row"><div class="m-key">About</div><div class="m-val">${art.description}</div></div>
@@ -189,6 +189,13 @@ function openModal(idx){
 function closeModal(){
   lightbox.classList.remove('open');
   document.body.style.overflow = '';
+}
+
+function formatAge(age){
+  const a = (age || '').trim();
+  if (!a) return '';
+  if (/^\d+$/.test(a)) return `${a}세`;
+  return a; // "art friends" 같은 특별활동 표기는 그대로
 }
 
 function formatDate(str){

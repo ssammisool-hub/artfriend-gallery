@@ -32,25 +32,10 @@
     padding:46px 24px 0;
     text-align:center;
   }
-  .logo{
-    display:inline-flex;
-    align-items:baseline;
-    gap:10px;
-    line-height:1;
-  }
-  .logo-mark{
-    font-family:'Playfair Display', serif;
-    font-weight:500;
-    font-size:22px;
-    letter-spacing:0.04em;
-  }
-  .logo-sub{
-    font-family:'Playfair Display', serif;
-    font-style:italic;
-    font-size:12px;
-    letter-spacing:0.34em;
-    text-transform:uppercase;
-    color:var(--muted);
+  .logo-img{
+    height:42px;
+    width:auto;
+    display:inline-block;
   }
 
   /* ===== Hero search (portal style) ===== */
@@ -275,6 +260,7 @@
 
   @media (max-width:780px){
     .masthead{padding:34px 20px 0;}
+    .logo-img{height:34px;}
     .hero{padding:40px 20px 24px;}
     .gallery{grid-template-columns:repeat(3, 1fr); gap:2px; margin-top:40px;}
     .card{aspect-ratio:1/1;}
@@ -304,15 +290,12 @@
 <body>
 
 <header class="masthead">
-  <div class="logo">
-    <span class="logo-mark">Art Friend</span>
-    <span class="logo-sub">Gallery</span>
-  </div>
+  <img class="logo-img" src="https://i.imgur.com/reKI9Ol.jpeg" alt="Art Friend Gallery">
 </header>
 
 <section class="hero">
   <div class="search-wrap">
-    <input id="searchInput" type="text" placeholder="작가 이름 또는 키워드로 검색" autocomplete="off" spellcheck="false">
+    <input id="searchInput" type="text" placeholder="키워드로 검색해보세요!" autocomplete="off" spellcheck="false">
     <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="1.4">
       <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/>
     </svg>
