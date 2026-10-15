@@ -264,16 +264,12 @@ function formatAge(age){
 
 // 모바일 최적화: 목록은 작은 썸네일, 크게 보기는 중간 크기로 불러옴
 // - 드라이브(lh3) 주소: =w숫자 로 크기 지정
-// - 임구르 주소: 파일명 끝에 l(640px)을 붙인 축소본 사용 (크게 보기는 원본)
+// - 임구르 주소: 원본 그대로 (임구르 축소본은 오히려 느려서 사용 안 함)
 function sizedImage(url, mode){
   if (!url) return url;
   if (url.includes('googleusercontent.com')){
     const w = mode === 'thumb' ? 480 : 1200;
     return url.replace(/=w\d+.*$/, '') + `=w${w}`;
-  }
-  if (mode === 'thumb'){
-    const m = url.match(/^(https?:\/\/i\.imgur\.com\/)([A-Za-z0-9]+)(\.(?:jpe?g|png|gif|webp))$/i);
-    if (m) return `${m[1]}${m[2]}l${m[3]}`;
   }
   return url;
 }
