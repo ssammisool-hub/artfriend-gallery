@@ -72,16 +72,11 @@ function loadData(){
 }
 
 // ---------- 태그 버튼 생성 (고정) ----------
-// 레벨 버튼은 영어 이름 아래에 한글 학년을 작게 표시
 function makePill(tag){
   const pill = document.createElement('button');
   pill.className = 'tag-pill';
   pill.dataset.tag = tag;
-  if (LEVEL_LABELS[tag]){
-    pill.innerHTML = `${tag}<small style="display:block;font-size:10px;opacity:.6;margin-top:1px">${LEVEL_LABELS[tag]}</small>`;
-  } else {
-    pill.textContent = tag;
-  }
+  pill.textContent = tag;
   pill.addEventListener('click', () => toggleTag(tag));
   return pill;
 }
