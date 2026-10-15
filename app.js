@@ -4,7 +4,20 @@
 
 const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIsCafYJeB2Aw9S4wfwBWNIVMGgOi8oVRNWX-0we-0O4GFvYpgieihGMWx5D4EkAXN461Pw30T0x2F/pub?gid=0&single=true&output=csv";
 
-const FIXED_TAGS = ["Kids", "Junior", "Drawing", "Craft", "Special", "Exhibition"];
+// 태그 버튼: 줄 단위 그룹 (레벨 / 주제 / 기법)
+const TAG_GROUPS = [
+  ["Kids", "Junior", "Junior+", "Special", "Exhibition"],
+  ["상상화", "인물화", "풍경화", "정물화", "동물화", "상황묘사"],
+  ["수채화", "소묘", "입체·공예", "디지털드로잉"]
+];
+const FIXED_TAGS = TAG_GROUPS.flat();
+
+// 레벨 태그 옆에 붙는 한글 보조 표기
+const LEVEL_LABELS = {
+  "Kids": "유치부",
+  "Junior": "초등 저학년",
+  "Junior+": "초등 고학년"
+};
 
 let ARTWORKS = [];
 let activeTags = new Set();
@@ -33,6 +46,7 @@ function loadData(){
     complete: (results) => {
       ARTWORKS = results.data
         .filter(row => row.title && row.img) // 빈 행 제외
+        .filter(row => String(row.approved || '').trim().toUpperCase() !== 'FALSE') // 미승인 작품 제외
         .map(row => ({
           id: row.id,
           title: (row.title || '').trim(),
@@ -58,14 +72,25 @@ function loadData(){
 }
 
 // ---------- 태그 버튼 생성 (고정) ----------
+function tagLabel(tag){
+  return LEVEL_LABELS[tag] ? `${tag} · ${LEVEL_LABELS[tag]}` : tag;
+}
+
 function buildTags(){
-  FIXED_TAGS.forEach(tag => {
-    const pill = document.createElement('button');
-    pill.className = 'tag-pill';
-    pill.textContent = tag;
-    pill.dataset.tag = tag;
-    pill.addEventListener('click', () => toggleTag(tag));
-    tagRow.appendChild(pill);
+  TAG_GROUPS.forEach((group, gi) => {
+    if (gi > 0){
+      const br = document.createElement('div');
+      br.style.cssText = 'flex-basis:100%;height:0';
+      tagRow.appendChild(br);
+    }
+    group.forEach(tag => {
+      const pill = document.createElement('button');
+      pill.className = 'tag-pill';
+      pill.textContent = tagLabel(tag);
+      pill.dataset.tag = tag;
+      pill.addEventListener('click', () => toggleTag(tag));
+      tagRow.appendChild(pill);
+    });
   });
 }
 
@@ -117,7 +142,7 @@ function render(){
       <img src="${art.image}" alt="${art.title}" loading="lazy">
       <div class="card-overlay">
         <div class="c-name">${art.title}</div>
-        <div class="c-meta">${[formatAge(art.age), art.material].filter(Boolean).join(' · ')}</div>
+        <div class="c-meta">${[formatAge(art.age) || levelOf(art), art.material].filter(Boolean).join(' · ')}</div>
       </div>`;
     card.addEventListener('click', () => openModal(idx));
     galleryEl.appendChild(card);
@@ -141,6 +166,7 @@ const hint = document.getElementById('lbHint');
 function slideMarkup(art){
   const tags = art.tags.filter(t => FIXED_TAGS.includes(t)).map(t =>
     `<button class="tag-pill" data-tag="${t}">${t}</button>`).join('');
+  const row = (key, val) => val ? `<div class="m-row"><div class="m-key">${key}</div><div class="m-val">${val}</div></div>` : '';
   return `
     <div class="lb-slide">
       <div class="lb-media" data-close="1">
@@ -148,10 +174,10 @@ function slideMarkup(art){
       </div>
       <div class="lb-meta">
         <div class="m-title">${art.title}</div>
-        <div class="m-author">${formatAge(art.age)}</div>
-        <div class="m-row"><div class="m-key">Material</div><div class="m-val">${art.material}</div></div>
-        <div class="m-row"><div class="m-key">Date</div><div class="m-val">${formatDate(art.date)}</div></div>
-        <div class="m-row"><div class="m-key">About</div><div class="m-val">${art.description}</div></div>
+        <div class="m-author">${formatAge(art.age) || levelOf(art)}</div>
+        ${row('Material', art.material)}
+        ${row('Date', formatDate(art.date))}
+        ${row('About', art.description)}
         <div class="m-tags">${tags}</div>
       </div>
     </div>`;
@@ -205,6 +231,12 @@ function formatAge(age){
   if (!a) return '';
   if (/^\d+$/.test(a)) return `${a}세`;
   return a; // "art friends" 같은 특별활동 표기는 그대로
+}
+
+// 나이 정보가 없는 새 작품은 레벨 태그로 표시 (예: "초등 저학년")
+function levelOf(art){
+  const lv = art.tags.find(t => LEVEL_LABELS[t]);
+  return lv ? LEVEL_LABELS[lv] : '';
 }
 
 function formatDate(str){
