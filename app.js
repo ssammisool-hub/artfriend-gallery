@@ -72,26 +72,54 @@ function loadData(){
 }
 
 // ---------- 태그 버튼 생성 (고정) ----------
-function tagLabel(tag){
-  return LEVEL_LABELS[tag] ? `${tag} · ${LEVEL_LABELS[tag]}` : tag;
+// 레벨 버튼은 영어 이름 아래에 한글 학년을 작게 표시
+function makePill(tag){
+  const pill = document.createElement('button');
+  pill.className = 'tag-pill';
+  pill.dataset.tag = tag;
+  if (LEVEL_LABELS[tag]){
+    pill.innerHTML = `${tag}<small style="display:block;font-size:10px;opacity:.6;margin-top:1px">${LEVEL_LABELS[tag]}</small>`;
+  } else {
+    pill.textContent = tag;
+  }
+  pill.addEventListener('click', () => toggleTag(tag));
+  return pill;
 }
 
+// 첫 화면에는 레벨만 보이고, 주제·기법은 버튼을 눌러 펼침
+let moreBtn, moreBox;
 function buildTags(){
-  TAG_GROUPS.forEach((group, gi) => {
+  TAG_GROUPS[0].forEach(tag => tagRow.appendChild(makePill(tag)));
+
+  moreBtn = document.createElement('button');
+  moreBtn.className = 'tag-pill';
+  moreBtn.style.borderStyle = 'dashed';
+  moreBtn.addEventListener('click', () => {
+    moreBox.style.display = moreBox.style.display === 'none' ? 'flex' : 'none';
+    updateMoreBtn();
+  });
+  tagRow.appendChild(moreBtn);
+
+  moreBox = document.createElement('div');
+  moreBox.style.cssText = 'display:none;flex-basis:100%;flex-wrap:wrap;justify-content:center;gap:9px;';
+  TAG_GROUPS.slice(1).forEach((group, gi) => {
     if (gi > 0){
       const br = document.createElement('div');
       br.style.cssText = 'flex-basis:100%;height:0';
-      tagRow.appendChild(br);
+      moreBox.appendChild(br);
     }
-    group.forEach(tag => {
-      const pill = document.createElement('button');
-      pill.className = 'tag-pill';
-      pill.textContent = tagLabel(tag);
-      pill.dataset.tag = tag;
-      pill.addEventListener('click', () => toggleTag(tag));
-      tagRow.appendChild(pill);
-    });
+    group.forEach(tag => moreBox.appendChild(makePill(tag)));
   });
+  tagRow.appendChild(moreBox);
+  updateMoreBtn();
+}
+
+// 접힌 상태에서도 선택된 주제·기법 개수를 보여줌
+function updateMoreBtn(){
+  if (!moreBtn) return;
+  const open = moreBox.style.display !== 'none';
+  const hidden = TAG_GROUPS.slice(1).flat().filter(t => activeTags.has(t)).length;
+  moreBtn.textContent = (open ? '주제·기법 접기 −' : '주제·기법 +') + (!open && hidden ? ` (${hidden})` : '');
 }
 
 function toggleTag(tag){
@@ -122,6 +150,7 @@ function getFiltered(){
 
 // ---------- 그리드 렌더 ----------
 function render(){
+  updateMoreBtn();
   viewList = getFiltered();
   galleryEl.innerHTML = '';
 
