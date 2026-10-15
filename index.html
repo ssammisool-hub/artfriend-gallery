@@ -98,6 +98,12 @@
   .tag-pill:hover{border-color:var(--ink);}
   .tag-pill.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
 
+  /* 구형 TV·브라우저(aspect-ratio 미지원)용 정사각형 칸 대체 규칙 */
+  @supports not (aspect-ratio:1/1){
+    .card{height:0; padding-top:100%;}
+    .card img{position:absolute; top:0; left:0;}
+  }
+
   /* ===== Gallery grid ===== */
   .gallery{
     display:grid;
