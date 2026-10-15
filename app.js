@@ -322,6 +322,60 @@ window.addEventListener('resize', () => {
   }
 });
 
+// ============================================================
+// 당겨서 새로고침 (모바일)
+// 카카오톡 등 앱 내 브라우저에는 기본 기능이 없어서 직접 구현.
+// 브라우저 기본 기능과 겹쳐 두 번 새로고침되지 않도록 기본 동작은 끔.
+// ============================================================
+(function setupPullToRefresh(){
+  const THRESHOLD = 70;   // 이만큼 당기면 새로고침
+  const MAX = 110;        // 표시 위치 최대 이동
+  const HIDDEN = 'translate(-50%,-60px)';
+
+  document.documentElement.style.overscrollBehaviorY = 'contain';
+  document.body.style.overscrollBehaviorY = 'contain';
+
+  const ind = document.createElement('div');
+  ind.style.cssText = 'position:fixed;top:0;left:50%;transform:' + HIDDEN + ';z-index:60;' +
+    'font-family:"Noto Serif KR",serif;font-size:12px;letter-spacing:.02em;padding:7px 16px;' +
+    'border-radius:999px;background:var(--ink,#111);color:var(--paper,#fff);pointer-events:none;';
+  ind.textContent = '당겨서 새로고침';
+  document.body.appendChild(ind);
+
+  let startY = null, pull = 0;
+
+  window.addEventListener('touchstart', (e) => {
+    const lbOpen = document.getElementById('lightbox')?.classList.contains('open');
+    if (window.scrollY <= 0 && !lbOpen && e.touches.length === 1){
+      startY = e.touches[0].clientY; pull = 0;
+      ind.style.transition = 'none';
+    } else {
+      startY = null;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (startY === null) return;
+    pull = (e.touches[0].clientY - startY) * 0.5;
+    if (pull <= 0){ ind.style.transform = HIDDEN; return; }
+    ind.style.transform = `translate(-50%,${Math.min(pull, MAX) - 44}px)`;
+    ind.textContent = pull >= THRESHOLD ? '놓으면 새로고침' : '당겨서 새로고침';
+  }, { passive: true });
+
+  window.addEventListener('touchend', () => {
+    if (startY === null) return;
+    ind.style.transition = 'transform .25s';
+    if (pull >= THRESHOLD){
+      ind.textContent = '새로고침 중…';
+      ind.style.transform = 'translate(-50%,16px)';
+      setTimeout(() => location.reload(), 150);
+    } else {
+      ind.style.transform = HIDDEN;
+    }
+    startY = null; pull = 0;
+  });
+})();
+
 // ---------- init ----------
 buildTags();
 loadData();
