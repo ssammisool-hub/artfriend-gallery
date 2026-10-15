@@ -239,8 +239,11 @@ function levelOf(art){
   return lv ? LEVEL_LABELS[lv] : '';
 }
 
+// 날짜는 "년.월"까지만 표시 (2026-10-15, 2026. 6, 2026.6 → 2026.10, 2026.6)
 function formatDate(str){
-  return (str || '').trim();
+  const s = (str || '').trim();
+  const m = s.match(/(\d{4})\D+(\d{1,2})/);
+  return m ? `${m[1]}.${Number(m[2])}` : s;
 }
 
 function go(dir){
