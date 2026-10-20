@@ -369,4 +369,20 @@ window.addEventListener('resize', () => {
 
 // ---------- init ----------
 buildTags();
+
+// 주소에 ?tag=Kids 처럼 붙이면 해당 태그가 켜진 상태로 열림 (상담 슬라이드에서 바로 이동용)
+// 쉼표로 여러 개 가능. 주소에서 '+'가 공백으로 바뀌는 경우(Junior+)도 되살림
+(function applyTagFromUrl(){
+  const raw = new URLSearchParams(location.search).get('tag');
+  if (!raw) return;
+  raw.split(',').map(v => v.replace(/^\s+/, '').replace(/ /g, '+')).forEach(v => {
+    const tag = FIXED_TAGS.find(t => t.toLowerCase() === v.toLowerCase());
+    if (tag) activeTags.add(tag);
+  });
+  document.querySelectorAll('#tagRow .tag-pill').forEach(p => {
+    p.classList.toggle('active', activeTags.has(p.dataset.tag));
+  });
+  updateMoreBtn();
+})();
+
 loadData();
